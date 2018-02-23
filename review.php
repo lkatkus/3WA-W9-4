@@ -1,3 +1,81 @@
+<?php
+    // FOR DISPLAYING ERRORS
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL| E_STRICT);
+
+    // CLASS INCLUDES
+    include 'classes/Database.class.php';
+    include 'classes/Review.class.php';
+?>
+
+<?php
+
+    $firstName = "";
+    $lastName = "";
+    $email = "";
+    $content = "";
+    $submit = true;
+
+    $firstNameValid = true;
+    $lastNameValid = true;
+    $emailValid = true;
+    $contentValid = true;
+
+
+    if($_SERVER["REQUEST_METHOD"] == "POST"){
+        $firstName = test_input($_POST["firstName"]);
+            if(empty($firstName)){
+                $submit = false;
+                $firstNameValid = false;
+            }
+            if(!preg_match("/^[a-zA-Z ]*$/",$firstName)){
+                $submit = false;
+                $firstNameValid = false;
+            }
+
+        $lastName = test_input($_POST["lastName"]);
+            if(empty($lastName)){
+                $submit = false;
+                $lastNameValid = false;
+            }
+            if (!preg_match("/^[a-zA-Z ]*$/",$lastName)) {
+                $submit = false;
+                $lastNameValid = false;
+            }
+
+        $email = test_input($_POST["email"]);
+            if(empty($email)){
+                $submit = false;
+                $emailValid = false;
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $submit = false;
+                $emailValid = false;
+            }
+
+        $content = test_input($_POST["content"]);
+            if(empty($content)){
+                $submit = false;
+                $contentValid = false;
+            }
+
+        // SUBMIT IF EVERYTHING IS OK
+        if($submit){
+            $review = new Review();
+            $review -> addReview($firstName, $lastName, $email, $content);
+        }
+    }
+
+    function test_input($data) {
+        $data = trim($data);
+        $data = stripslashes($data);
+        $data = htmlspecialchars($data);
+        return $data;
+    }
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,18 +114,19 @@
         <div class="col-md-8 blog-main">
 
             <!--  FORM -->
-            <form class="needs-validation mt-4" novalidate="">
+            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" class="mt-4" method="POST">
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="firstName">First name </label>
-                  <input type="text" class="form-control" id="firstName" placeholder="" value="" required="" style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABHklEQVQ4EaVTO26DQBD1ohQWaS2lg9JybZ+AK7hNwx2oIoVf4UPQ0Lj1FdKktevIpel8AKNUkDcWMxpgSaIEaTVv3sx7uztiTdu2s/98DywOw3Dued4Who/M2aIx5lZV1aEsy0+qiwHELyi+Ytl0PQ69SxAxkWIA4RMRTdNsKE59juMcuZd6xIAFeZ6fGCdJ8kY4y7KAuTRNGd7jyEBXsdOPE3a0QGPsniOnnYMO67LgSQN9T41F2QGrQRRFCwyzoIF2qyBuKKbcOgPXdVeY9rMWgNsjf9ccYesJhk3f5dYT1HX9gR0LLQR30TnjkUEcx2uIuS4RnI+aj6sJR0AM8AaumPaM/rRehyWhXqbFAA9kh3/8/NvHxAYGAsZ/il8IalkCLBfNVAAAAABJRU5ErkJggg==&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;">
+                  <input name="firstName" type="text" class="form-control <?php if(!$firstNameValid){ echo 'is-invalid'; } ?>" id="firstName" value="" required style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABHklEQVQ4EaVTO26DQBD1ohQWaS2lg9JybZ+AK7hNwx2oIoVf4UPQ0Lj1FdKktevIpel8AKNUkDcWMxpgSaIEaTVv3sx7uztiTdu2s/98DywOw3Dued4Who/M2aIx5lZV1aEsy0+qiwHELyi+Ytl0PQ69SxAxkWIA4RMRTdNsKE59juMcuZd6xIAFeZ6fGCdJ8kY4y7KAuTRNGd7jyEBXsdOPE3a0QGPsniOnnYMO67LgSQN9T41F2QGrQRRFCwyzoIF2qyBuKKbcOgPXdVeY9rMWgNsjf9ccYesJhk3f5dYT1HX9gR0LLQR30TnjkUEcx2uIuS4RnI+aj6sJR0AM8AaumPaM/rRehyWhXqbFAA9kh3/8/NvHxAYGAsZ/il8IalkCLBfNVAAAAABJRU5ErkJggg==&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;">
                   <div class="invalid-feedback">
                     Valid first name is required.
                   </div>
                 </div>
+
                 <div class="col-md-6 mb-3">
                   <label for="lastName">Last name</label>
-                  <input type="text" class="form-control" id="lastName" placeholder="" value="" required="">
+                  <input name="lastName" type="text" class="form-control <?php if(!$lastNameValid){ echo 'is-invalid'; } ?>" id="lastName" value="<?= $lastName ?>" required>
                   <div class="invalid-feedback">
                     Valid last name is required.
                   </div>
@@ -56,7 +135,7 @@
 
               <div class="mb-3">
                 <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" placeholder="you@example.com">
+                <input name="email" type="email" class="form-control <?php if(!$emailValid){ echo 'is-invalid'; } ?>" id="email" placeholder="you@example.com" required>
                 <div class="invalid-feedback">
                   Please enter a valid email address for shipping updates.
                 </div>
@@ -64,7 +143,7 @@
 
               <div class="mb-3">
                 <label for="review">Review</label>
-                <textarea id="textarea" class="form-control" rows="6"></textarea>
+                <textarea name="content" id="textarea" class="form-control <?php if(!$contentValid){ echo 'is-invalid'; } ?>" rows="6" required></textarea>
                 <div class="invalid-feedback">
                   Please enter a valid email address for shipping updates.
                 </div>
